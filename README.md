@@ -1,6 +1,6 @@
 # cljs.i18n - API proposal
 
-fulcro provides an i18n api which currently requires a separate CLJS build and involves a whole bunch of `gettext` related tooling to extract strings for translation.
+fulcro provides an i18n API which currently requires a separate CLJS build and involves a whole bunch of `gettext` related tooling to extract strings for translation. This is unreliable and breaks easily since it requires the code to be emitted in a certain way.
 
 This could be significantly easier when using the `tr` macro itself to collect all relevant strings and being able to extract them on demand via the CLJS analyzer data.
 
@@ -17,13 +17,15 @@ The user API is simple and relies on a single `tr` macro.
 
 ;; translation with dynamic replacements, FormatJS?
 (tr "foo {thing} bar" :thing something-dynamic)
+(tr "foo {thing} bar" {:thing something-dynamic}
+(tr "foo {thing} bar" a-map)
+(tr "..." :one 1 {:two 2})
+(tr "..." :one 1 a-map
 
 ;; translation with context
 ;; when the same string is used in different contexts
-(tr ["foo?" "foo"])
-(tr ["foo?" "bar"])
-
-(tr ["foo {thing} bar" "some-context"] :thing something-dynamic)
+(tr "foo?" :cljs.i18n/context "foo" ...)
+(tr "foo?" :cljs.i18n/context "bar" ...)
 ```
 
 ## Providing Translations
@@ -39,8 +41,7 @@ The translations are provided via a simple protocol with no default implementati
 
 - `context` is either `nil` or a `"string"`
 - `key` is the original text or key used in `tr`
-- `args` is `nil` or a JS Object (not a clojure map, avoids a call to `clj->js` when passing it to a JS impl, eg. FormatJS)
-
+- `args` is expected to be a clojure map (not checked currently since the user can pass in anything)
 
 At runtime the user (or build tool) can set the translation implementation. A toy implementation that just upper cases all strings could look like this.
 
@@ -66,4 +67,5 @@ The `cljs.i18n/tr` macro collects all used strings per namespace. It is added to
   :args [:thing]}]
 ```
 
-Tools can extract this data and generate `.pot` files or any other translation format. The information is collected per namespace so it works properly with compiler caching enabled. It should be de-duped before passing it to other tools but AFTER compilation.
+Tools can extract this data and generate `.pot` files or any other translation format. The information is collected per namespace so it works properly with compiler caching enabled. It should be de-duped before passing it to other tools but only AFTER compilation finishes.
+

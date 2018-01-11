@@ -12,12 +12,12 @@
 
 (defn get-text
   "do not use directly, accessed via the `tr` macro"
-  [context key args]
+  [context msg args]
   (let [tx @translate-ref]
     (if-not tx
-      key ;; FIXME: args injection?
-      (-get-text tx context key args)
+      msg
+      (-get-text tx context msg args)
       )))
 
-(defn tr [& args]
+(defn tr [msg & args]
   (throw (ex-info "can only use tr as a macro" {})))
